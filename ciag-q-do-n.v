@@ -47,11 +47,43 @@ Definition odgniec' (n : nat) : nat * nat :=
 (* No ale podmiankę zachowam se na koniec *)
 
 
+Lemma sqrp1 n : n.+1^2 = n^2 + 2*n +1.
+Proof.
+  rewrite -addn1 sqrnD -![n^2 + _ + _]addnA [1 ^2 + 2*_]addnC -[1^2]/1 muln1 //.
+Qed.
+
+
+(* 
+PeanoNat.Nat.sqrt_unique:
+  forall a b : nat,
+  ((b * b)%coq_nat <= a)%coq_nat /\ (a < (b.+1 * b.+1)%coq_nat)%coq_nat -> PeanoNat.Nat.sqrt a = b
+*)
+Lemma sqrt_ij i j : Nat.sqrt ((i + j) ^ 2 + i) = (i+j).
+Proof.
+  apply: PeanoNat.Nat.sqrt_unique.
+  rewrite -[(_ * _)%coq_nat]/((i+j) * (i+j)) -[(_ * _)%coq_nat]/((i+j).+1 * (i+j).+1) !mulnn.
+  split.
+  apply /leP.
+  apply: leq_addr.
+  apply /ltP.
+  rewrite sqrp1.
+  rewrite -(@addnA ((i+j)^2) (2*(i+j)) 1) ltn_add2l.
+  rewrite mul2n -addnn. rewrite -[i in X in X < _]addn0.
+  Check (((i + j) + (i + j)) + 1).
+  Check (addnA 1 2 3).
+  rewrite -[_ + _ + 1 ]addnA -[i+  j + _ ]addnA  ltn_add2l.
+  rewrite addnA addn1.
+  apply: ltn0Sn.
+Qed.
+
+Lemma aplusbminusa a b : a + b -a = b.
+Proof.
+  rewrite -[a in X in _+_-X=_]addn0 subnDl subn0 //.
+Qed.
 
 Lemma zgniec_odgniec k : odgniec (zgniec k) = k.
 Proof.
   case: k => i j.
-  rewrite /zgniec /odgniec.
-  rewrite pair_equal_spec; split.
-
+  rewrite /zgniec /odgniec !sqrt_ij pair_equal_spec !aplusbminusa //.
+Qed.
 
