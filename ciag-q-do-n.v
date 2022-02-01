@@ -256,10 +256,37 @@ Proof.
   done.
 Qed.
 
+Lemma sqdnatdef sq : seqdonat sq =
+                       zgniec ((length sq),  foldr (fun  r z => zgniec ( (ratdnat r),z)) 0 sq).
+Proof. done. Qed.
+
+Lemma sqdnatdef1 a  sq : seqdonat (a ::sq) =
+                       zgniec ((length (a ::sq)), zgniec ( ratdnat a,   foldr (fun  r z => zgniec ( (ratdnat r),z)) 0 (sq))).
+Proof. done. Qed.
+
+
+Lemma eloo a l :natdoseq (seqdonat (a :: l)) = a :: (natdoseq (seqdonat l)).
+Proof.
+  rewrite sqdnatdef1.
+  rewrite {1}/natdoseq zgniec_odgniec.
+  rewrite odgn1. (* czemu to mi się "length" otwiera, to przeszkadza *)
+  rewrite zgniec_odgniec ratdookola.
+  apply (f_equal (fun x => a :: x)).
+  by rewrite /seqdonat /natdoseq zgniec_odgniec.
+Qed.
 
 Lemma seqdookola sq : natdoseq (seqdonat sq) = sq.
 Proof.
-  elim : sq.
-  by cbn.
-  move => q qs H.
-  unfold seqdonat.
+  elim : sq => //q qs H.
+  rewrite -[in RHS]H.
+  apply: eloo.
+Qed.
+
+
+
+Lemma twierdzenie: hipoteza.
+Proof.
+  exists natdoseq => qs.
+  exists (seqdonat qs).
+  apply: seqdookola.
+Qed.
