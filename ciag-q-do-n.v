@@ -4,7 +4,7 @@ Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
 From mathcomp Require Import algebra.rat.
-From mathcomp Require Import ssrint.
+From mathcomp Require Import ssrint seq.
 
 
 (* każdy skończony ciąg liczb wymiernych da się zakodować liczbą naturalną *)
@@ -164,3 +164,102 @@ Proof.
   apply /eqP.
   apply: ratdookolaq.
 Qed.
+
+Search "fold".
+Definition seqdonat (sq : seq rat) : nat :=
+ zgniec ((length sq),  foldr (fun  r z => zgniec ( (ratdnat r),z)) 0 sq).
+
+
+  (*foldl (fun z r => zgniec (z, (ratdnat r))) (length sq) sq.*)
+  (*foldr (fun  r z => zgniec (z, (ratdnat r))) (length sq) sq.*)
+
+Fixpoint  odgn ln wrt :=
+    match ln with
+    | O => [::]
+    | S n => let (x, r) := odgniec wrt in (natdrat x) :: (odgn  n r)
+    end.
+
+  
+  Definition natdoseq (n : nat): seq rat :=
+  let (len, wartosci) := odgniec n in
+  odgn len wartosci.
+
+
+
+Open Scope rat_scope.
+Definition t1 : rat := 1. (*[rat (2: int) // (3 : int)].*)
+Definition t2 : rat := ratz (2:int). (*[rat (3: int) // (2 : int)].*)
+Definition t3 : rat := [rat (9: int) // (4 : int)].
+Eval compute in (ratdnat t1).
+(* Eval compute in (seqdonat [:: t1]). *)
+Close Scope rat_scope.
+
+
+Lemma foldl1step {A B : Type} (f : A ->B -> A) z q qs : foldl f z (q::qs) = foldl f (f z q) qs.
+Proof. done. Qed.
+
+Lemma fold1step {A B : Type} (f : B -> A-> A) (z:A) (q:B) qs : foldr f z  (q::qs) = f q (foldr  f  z qs) .
+Proof. done. Qed.
+
+Lemma foldl0 {A B : Type} (f : A ->B -> A) z  : foldl f z [::] = z.
+Proof. done. Qed.
+
+Lemma fold0 {A B : Type} (f : A ->B -> B) z  : foldr  f z  [::] = z.
+Proof. done. Qed.
+
+
+Lemma odgn1 ln wrt : odgn ln.+1 wrt = let (x, r) := odgniec wrt in (natdrat x) :: (odgn  ln r).
+Proof. done. Qed.
+
+Lemma odgn0 wrt : odgn 0 wrt = [::].
+Proof. done. Qed.
+
+Lemma seqdookola0  : natdoseq (seqdonat [:: ]) = [:: ]. Proof. done. Qed.
+
+Lemma seqdookola1 a : natdoseq (seqdonat [:: a]) = [:: a].
+Proof.
+  rewrite /seqdonat.
+  rewrite fold1step fold0. 
+  rewrite /natdoseq.
+  rewrite zgniec_odgniec.
+  rewrite -[length [:: a]]/1.
+  rewrite odgn1 . rewrite zgniec_odgniec // .
+
+  rewrite ratdookola //.
+Qed.
+
+
+Lemma seqdookola2  (a  b: rat):  natdoseq (seqdonat [:: a; b]) = [:: a ;b].
+Proof.
+  rewrite /seqdonat.
+  rewrite fold1step fold1step fold0.
+  rewrite /natdoseq.
+  rewrite zgniec_odgniec.
+  rewrite -[length _]/(0.+1.+1).
+  rewrite odgn1 zgniec_odgniec.
+  rewrite odgn1 zgniec_odgniec odgn0 !ratdookola.
+  done.
+Qed.
+
+(* chyba działa, ale jeszcze się muszę upewnić *) 
+Lemma seqdookola3  (a  b c: rat):  natdoseq (seqdonat [:: a; b;c]) = [:: a ;b;c].
+Proof.
+  rewrite /seqdonat.
+  rewrite !fold1step fold0.
+  rewrite /natdoseq.
+  rewrite zgniec_odgniec.
+  rewrite -[length _]/(3).
+  rewrite odgn1 zgniec_odgniec.
+  rewrite odgn1 zgniec_odgniec.
+  rewrite odgn1 zgniec_odgniec.
+  rewrite odgn0 !ratdookola.
+  done.
+Qed.
+
+
+Lemma seqdookola sq : natdoseq (seqdonat sq) = sq.
+Proof.
+  elim : sq.
+  by cbn.
+  move => q qs H.
+  unfold seqdonat.
