@@ -4,6 +4,7 @@ Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
 From mathcomp Require Import algebra.rat.
+From mathcomp Require Import ssrint.
 
 
 (* każdy skończony ciąg liczb wymiernych da się zakodować liczbą naturalną *)
@@ -87,3 +88,79 @@ Proof.
   rewrite /zgniec /odgniec !sqrt_ij pair_equal_spec !aplusbminusa //.
 Qed.
 
+Definition intdnat(z : int) : nat :=
+  match z with
+  | ssrint.Posz n => zgniec (n, 0)
+  | ssrint.Negz n => zgniec (n, 1)          
+  end.
+
+Definition natdint(n : nat) :=
+  let (a,b) := odgniec n in
+  if b == 0 then Posz a else Negz a.
+
+Lemma intdookola z : natdint (intdnat z) =z.
+Proof.
+  case : z => n ;  rewrite /natdint /intdnat  zgniec_odgniec //.
+Qed.
+
+Definition ratdnat (r : rat) : nat :=
+  let (a,b) := rat.valq r in  zgniec(intdnat(a), intdnat(b)).
+
+
+Definition natdrat (n : nat): rat .
+  pose (ab := odgniec n).
+  pose (a := natdint ab.1).
+  pose (b := natdint ab.2).
+  Locate "_ < _".
+  Open Scope order_scope.
+  pose (b'  :=  (if (Posz 0) < b then b else (Posz 1 : int))).
+  pose (a' := if (coprime `|a| `|b' |) then a else (Posz 1 : int)). 
+  refine (@Rat (a', b') _ ).
+  apply /andP; constructor.
+  rewrite -[(a',b').2]/b' /b'.
+  by case: (ifP).
+  Close Scope order_scope.
+  rewrite -[(_,_).1]/a' -[(_,_).2]/b'.
+  rewrite  /a'. case: ifP => //= _.
+  apply: coprime1n.
+Defined.
+
+Lemma ratdookolaq r : natdrat (ratdnat r) == r.
+Proof.
+  case : r => [[a b]] H.
+  rewrite -[_ == _]/(valq _ == valq _).
+  rewrite -[valq (Rat H)]/(a,b).
+  (* pozbyć się d, bo z nim to lipa *)
+  rewrite /ratdnat .
+  rewrite -[valq (Rat H)]/(a,b).
+
+  
+ (* clear d. (* będę tego potrzebował potem, ale dobrze, że nie ma tego na teraz *) *)
+
+  rewrite /natdrat.
+  
+
+  apply /eqP.
+  rewrite [(a,b) in RHS]surjective_pairing. 
+  rewrite  pair_equal_spec.
+  rewrite !zgniec_odgniec !intdookola.
+  split.
+  case: ifP => // X.
+  exfalso.
+  move : H => /andP [x d].
+  rewrite x in X.
+  simpl in d.
+  Search _ (_ = false) _.
+  rewrite X in d .
+  move : d => //.
+
+    move : H => /andP [x d].
+    by     rewrite x.
+Qed.
+
+
+Lemma ratdookola r : natdrat (ratdnat r) = r.
+Proof.
+  apply /eqP.
+  apply: ratdookolaq.
+Qed.
