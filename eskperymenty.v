@@ -88,12 +88,38 @@ Proof.
   by move: (sqrt_specif n) => /andP; case.
 Qed.  
 
-Lemma reszta_ogr n : (n - ((√ n) ^ 2)) <= n.*2.
+Lemma roznica_miedzy_kwadratami'' n :
+  ((√ (n.+1))^2 == ((√ n)^2 + 2*√(n)).+1) || ((√ (n.+1)) == √ n).
 Proof.
-  elim: n => // n H.
+  apply /orP.
+  case: (PeanoNat.Nat.sqrt_succ_or n) => -> ; [left| by right].
+  rewrite  roznica_miedzy_kwadratami' => //.
+Qed.
 
-  case: (PeanoNat.Nat.sqrt_succ_or n) => ->.
-  rewrite roznica_miedzy_kwadratami'.
+
+Lemma roznica_miedzy_kwadratami''' n :
+ (√ (n)) < √ (n.+1) -> (√ (n.+1))^2 == ((√ n)^2 + 2*√(n)).+1.
+Proof.
+  move => H.
+  move : (roznica_miedzy_kwadratami'' n) => /orP. case => // .  
+  by   rewrite gtn_eqF.
+Qed.
+
+Lemma roznica_miedzy_kwadratami'''' n :
+ (√ (n)) < √ (n.+1) -> (√ (n.+1))^2 = ((√ n)^2 + 2*√(n)).+1.
+Proof.
+  move => H.
+  apply /eqP.
+  apply:  roznica_miedzy_kwadratami'''.
+done.
+Qed.
+
+Lemma reszta_ogr n : (n - ((√ n) ^ 2)) <= (√ n).*2.
+  elim: n => // n H.
+  case: (PeanoNat.Nat.sqrt_succ_or n).
+  move => Hx. rewrite Hx.
+
+    rewrite roznica_miedzy_kwadratami'.
   rewrite subSS.
 
   (*
@@ -107,24 +133,23 @@ subnDl: forall p m n : nat, p + m - (p + n) = m - n
   apply: leq_sub2l.
 
   apply: leq_addr.
-  apply: (@leq_trans n.*2).
+  apply: (@leq_trans (√ n).*2).
   apply: H.
   rewrite doubleS.
   rewrite -addn1 -addn1 -addnA.
   apply: leq_addr.
-
-  apply: (@leq_trans n.+1).
-  apply: leq_subr.
+(***************)  
+  move => Hx. rewrite Hx.
+  Search _ ( _ < _) (_ == _).
+  move :  (@leq_eqVlt (  n - (√ n) ^ 2) (√ n).*2) H  => -> /orP.
+  case.
   
-   rewrite -addnn -addn1.
-   apply: leq_addr.
-Qed.
-
-   Lemma zo1 n : odgn (zgn n) == n.
+Lemma zo1 n : odgn (zgn n) == n.
   rewrite /zgn /odgn . 
   case: ifP; [by move => ->; rewrite xd|rewrite ltnNge; move => /negbFE H].
   case: ifP.
-  move: (reszta_ogr n) => Q J.
+  move => J.
+  move: (roznica_miedzy_kwadratami'' n).
   (*
     H : nq <= r
     J : 2*nq < r (H potrzebne żeby to wywnioskować)
