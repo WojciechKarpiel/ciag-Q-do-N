@@ -139,16 +139,15 @@ subnDl: forall p m n : nat, p + m - (p + n) = m - n
   rewrite -addn1 -addn1 -addnA.
   apply: leq_addr.
 (***************)  
-  move => Hx. rewrite Hx.
-  Search _ ( _ < _) (_ == _).
-  move :  (@leq_eqVlt (  n - (√ n) ^ 2) (√ n).*2) H  => -> /orP.
-  case.
+  move => Hx. rewrite  Hx. (* rewrite [√ n.+1  in X in _ <= X]Hx.*)
+
   
 Lemma zo1 n : odgn (zgn n) == n.
   rewrite /zgn /odgn . 
   case: ifP; [by move => ->; rewrite xd|rewrite ltnNge; move => /negbFE H].
-  case: ifP.
+case: ifP.
   move => J.
+  
   move: (roznica_miedzy_kwadratami'' n).
   (*
     H : nq <= r
